@@ -1,5 +1,7 @@
 name := "oracle-logminer-to-kinesis"
 
+organization := "io.wonder.soft"
+
 version := "0.0.1"
 
 scalaVersion := "2.12.4"
