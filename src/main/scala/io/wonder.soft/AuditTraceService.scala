@@ -27,17 +27,19 @@ trait AuditTraceService {
 
   val routes =
     path("v1" / "status") {
-      (get) {
+      get {
         logger.info("/v1/status")
 
         complete("ok")
       }
 
     } ~ path ("v1" / "log-files") {
-      (get) {
-        auditTraceActor ! "SAMPLE"
+      get {
+        parameters('schemaName) { schemaName =>
+          auditTraceActor ! schemaName
 
-        complete("ok")
+          complete("ok")
+        }
       }
     }
 

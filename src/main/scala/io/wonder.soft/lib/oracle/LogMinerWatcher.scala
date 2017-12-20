@@ -3,7 +3,7 @@ package io.wonder.soft.lib.oracle
 import scalikejdbc._
 
 case class LogFile(group: Int, fileName: String, status: String)
-case class LogMnrContent(timestamp: String, operation: String, sqlRedo: String)
+case class LogMnrContent(scn: Int, timestamp: String, operation: String, sqlRedo: String)
 trait LogMinerWatcher {
 
   def findLogFile(implicit session: DBSession): LogFile = {
@@ -31,10 +31,18 @@ trait LogMinerWatcher {
       """.execute.apply
   }
 
-  def findLogMnrContents(implicit session: DBSession, tableName: String): List[LogMnrContent] = {
-    val result = sql"""
-       select TIMESTAMP, OPERATION, SQL_REDO from v$$logmnr_contents where username = $tableName
-    """.map(rs => LogMnrContent(rs.string("TIMESTAMP"), rs.string("OPERATION"), rs.string("SQL_REDO"))).list.apply
+  // https://docs.oracle.com/cd/E60665_01/db112/REFRN/dynviews_2035.htm
+  def findLogMnrContents(implicit session: DBSession, scn: Int, schemaName: String): List[LogMnrContent] = {
+
+    val result = if (scn == 0) {
+      sql"""
+       select SCN, TIMESTAMP, OPERATION, SQL_REDO from v$$logmnr_contents where username = $schemaName
+      """.map(rs => LogMnrContent(rs.int("SCN"), rs.string("TIMESTAMP"), rs.string("OPERATION"), rs.string("SQL_REDO"))).list.apply
+      } else {
+      sql"""
+       select SCN, TIMESTAMP, OPERATION, SQL_REDO from v$$logmnr_contents where username = $schemaName and scn > $scn
+      """.map(rs => LogMnrContent(rs.int("SCN"), rs.string("TIMESTAMP"), rs.string("OPERATION"), rs.string("SQL_REDO"))).list.apply
+    }
 
     result
   }

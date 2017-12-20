@@ -8,22 +8,42 @@ import scalikejdbc.config.DBs
 class AuditTraceActor extends Actor with LogMinerWatcher {
   DBs.setupAll()
 
+  var fileName = ""
+  var sleepCount = 0
+
   def receive  = {
-    case tableName: String =>
+    case schemaName: String =>
       DB localTx {implicit session =>
         val logFile = findLogFile
-        self ! (logFile, tableName)
+        this.fileName = logFile.fileName
+
+        self ! (logFile, schemaName)
       }
 
-    case (LogFile(group, fileName, status), tableName: String) =>
-      println(fileName)
-
+    case (LogFile(_, fileName, _), schemaName: String) =>
+      var scn: Int = 0
+      var preScn: Int = 0
       DB localTx {implicit session =>
         addLogFileToLogMiner(session, fileName)
 
         while (true) {
           Thread.sleep(1000L)
-          findLogMnrContents(session, tableName).foreach(lmc => println(lmc))
+          sleepCount += 1
+          if (sleepCount > 3000 && findLogFile.fileName != this.fileName) {
+            sleepCount = 0
+            self ! schemaName
+          }
+
+          preScn = scn
+          val resultSet = findLogMnrContents(session, scn, schemaName)
+          if (resultSet.nonEmpty) {
+            scn = resultSet.last.scn
+          }
+
+          if (scn > preScn) {
+            resultSet.foreach(lmc => println(lmc))
+            //TODO pass message to kinesis actor
+          }
         }
       }
   }
