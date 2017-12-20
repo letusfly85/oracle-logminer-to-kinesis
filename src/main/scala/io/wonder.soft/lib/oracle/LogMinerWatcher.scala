@@ -22,9 +22,6 @@ trait LogMinerWatcher {
   }
 
   def addLogFileToLogMiner(implicit session: DBSession, logFileName: String): Unit = {
-    // EXECUTE dbms_logmnr.add_logfile(logfilename => $logFileName ,options => dbms_logmnr.new)
-    // begin dbms_output.put_line('hoge'); end;
-
     sql"""
       begin dbms_logmnr.add_logfile(logfilename => $logFileName ,options => dbms_logmnr.new); end;
     """.execute.apply
