@@ -21,3 +21,5 @@ project/build.properties
 
 .idea
 
+lib
+database.conf

@@ -32,11 +32,19 @@ trait AuditTraceService {
 
         complete("ok")
       }
+
+    } ~ path ("v1" / "log-files") {
+      (get) {
+        auditTraceActor ! "SAMPLE"
+
+        complete("ok")
+      }
     }
+
 }
 
 object AuditTraceService extends App with AuditTraceService {
-  override implicit val system: ActorSystem  = ActorSystem(getClass.getPackage.getName)
+  override implicit val system: ActorSystem  = ActorSystem("AuditTracer")
   override implicit val executor: ExecutionContextExecutor = system.dispatcher
   override implicit val materializer: Materializer = ActorMaterializer()
 
