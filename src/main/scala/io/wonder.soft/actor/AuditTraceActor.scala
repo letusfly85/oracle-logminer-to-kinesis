@@ -9,7 +9,6 @@ class AuditTraceActor extends Actor with LogMinerWatcher {
   DBs.setupAll()
 
   var fileName = ""
-  var sleepCount = 0
 
   def receive  = {
     case schemaName: String =>
@@ -28,10 +27,11 @@ class AuditTraceActor extends Actor with LogMinerWatcher {
 
         while (true) {
           Thread.sleep(1000L)
-          sleepCount += 1
-          if (sleepCount > 3000 && findLogFile.fileName != this.fileName) {
-            sleepCount = 0
-            self ! schemaName
+          val currentLogFile = findLogFile
+          if (findLogFile.fileName != this.fileName) {
+            this.fileName = currentLogFile.fileName
+            addLogFileToLogMiner(session, this.fileName)
+            scn = 0; preScn = 0
           }
 
           preScn = scn
