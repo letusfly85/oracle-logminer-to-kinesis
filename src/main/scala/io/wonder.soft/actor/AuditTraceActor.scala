@@ -1,11 +1,12 @@
 package io.wonder.soft.actor
 
-import akka.actor.Actor
+import akka.actor.{Actor, ActorRef, Props}
 import io.wonder.soft.lib.oracle.{LogFile, LogMinerWatcher}
 import scalikejdbc.DB
 import scalikejdbc.config.DBs
 
 class AuditTraceActor extends Actor with LogMinerWatcher {
+  val kinesisActor: ActorRef = context.system.actorOf(Props(classOf[KinesisActor]), "kinesis-actor")
   DBs.setupAll()
 
   var fileName = ""
@@ -41,8 +42,10 @@ class AuditTraceActor extends Actor with LogMinerWatcher {
           }
 
           if (scn > preScn) {
-            resultSet.foreach(lmc => println(lmc))
-            //TODO pass message to kinesis actor
+            resultSet.foreach { lmc =>
+              println(lmc)
+              kinesisActor ! lmc
+            }
           }
         }
       }

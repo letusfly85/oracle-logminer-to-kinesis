@@ -1,12 +1,13 @@
 package io.wonder.soft.actor
 
 import akka.actor.Actor
+import io.wonder.soft.lib.aws.KinesisRecorder
+import io.wonder.soft.lib.oracle.LogMnrContent
 
-class KinesisActor extends Actor {
+class KinesisActor extends Actor with KinesisRecorder {
 
   def receive  = {
-    case msg: String =>
-    //todo pass data to kinesis
+    case logMnrContent: LogMnrContent =>
+      putRecords(logMnrContent)
   }
-
 }

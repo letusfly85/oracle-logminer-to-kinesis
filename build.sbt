@@ -29,7 +29,7 @@ libraryDependencies ++= {
     "org.scalikejdbc" %% "scalikejdbc-config"              % scalikeJDBCV,
     "mysql" % "mysql-connector-java" % "5.1.28",
 
-    "com.github.seratch" %% "awscala" % "0.5.+",
+    "com.amazonaws" % "amazon-kinesis-producer" % "0.12.8",
 
     "commons-io" % "commons-io" % "2.5",
 
